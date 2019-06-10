@@ -1,14 +1,17 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import router from "./router";
 
 import { defaultClient as apolloClient } from "./main";
-import { gql } from "apollo-boost";
+
+import { GET_POSTS, SIGNIN_USER, GET_CURRENT_USER } from "./queries";
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
     posts: [],
+    user: null,
     loading: false
   },
   mutations: {
@@ -17,38 +20,62 @@ export default new Vuex.Store({
     },
     setLoading: (state, payload) => {
       state.loading = payload;
+    },
+    setUser: (state, payload) => {
+      state.user = payload;
     }
   },
   actions: {
-    getPosts: ({ commit }) => {
+    getCurrentUser: ({ commit }) => {
       commit("setLoading", true);
-      //use ApolloClient to fire getPosts query
       apolloClient
         .query({
-          query: gql`
-            query {
-              getPosts {
-                _id
-                title
-                imageUrl
-              }
-            }
-          `
+          query: GET_CURRENT_USER
         })
         .then(({ data }) => {
-          //get data from actions to state iva mustation
-          //commit will pass data from actions to mutation
+          commit("setLoading", false);
+          commit("setUser", data.getCurrentUser);
+          console.log(data.getCurrentUser);
+        })
+        .catch(err => {
+          commit("setLoading", false);
+          console.error(err);
+        });
+    },
+    getPosts: ({ commit }) => {
+      commit("setLoading", true);
+      apolloClient
+        .query({
+          query: GET_POSTS
+        })
+        .then(({ data }) => {
           commit("setPosts", data.getPosts);
           commit("setLoading", false);
         })
-        .catch(error => {
-          console.log(error);
+        .catch(err => {
           commit("setLoading", false);
+          console.error(err);
+        });
+    },
+    signinUser: ({ commit }, payload) => {
+      apolloClient
+        .mutate({
+          mutation: SIGNIN_USER,
+          variables: payload
+        })
+        .then(({ data }) => {
+          localStorage.setItem("token", data.signinUser.token);
+          // to make sure the created method is run in main.js (we run getCurrentUser), reload the page.
+          router.go();
+        })
+        .catch(err => {
+          console.error(err);
         });
     }
   },
   getters: {
     posts: state => state.posts,
-    loading: state => state.loading
+    loading: state => state.loading,
+    user: state => state.user
   }
 });
