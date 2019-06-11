@@ -1,6 +1,6 @@
 import { gql } from "apollo-boost";
 
-//Posts Queries
+/* Posts Queries */
 export const GET_POSTS = gql`
   query {
     getPosts {
@@ -11,13 +11,14 @@ export const GET_POSTS = gql`
   }
 `;
 
-//User Queries
+/* User Queries */
 export const GET_CURRENT_USER = gql`
   query {
     getCurrentUser {
       _id
       username
       email
+      password
       avatar
       joinDate
       favorites {
@@ -29,10 +30,9 @@ export const GET_CURRENT_USER = gql`
   }
 `;
 
-//Posts Mutations
+/* Posts Mutations */
 
-//User Mutations
-
+/* User Mutations */
 export const SIGNIN_USER = gql`
   mutation($username: String!, $password: String!) {
     signinUser(username: $username, password: $password) {
@@ -43,7 +43,7 @@ export const SIGNIN_USER = gql`
 
 export const SIGNUP_USER = gql`
   mutation($username: String!, $email: String!, $password: String!) {
-    signinUser(username: $username, email: $email, password: $password) {
+    signupUser(username: $username, email: $email, password: $password) {
       token
     }
   }
