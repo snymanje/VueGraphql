@@ -29,12 +29,35 @@ module.exports = {
         });
       return posts;
     },
+    getUserPosts: async (_, { userId }, { Post }) => {
+      const posts = await Post.find({
+        createdBy: userId
+      });
+      return posts;
+    },
     getPost: async (_, { postId }, { Post }) => {
       const post = await Post.findOne({ _id: postId }).populate({
         path: "messages.messageUser",
         model: "User"
       });
       return post;
+    },
+    searchPosts: async (_, { searchTerm }, { Post }) => {
+      if (searchTerm) {
+        const searchResults = await Post.find(
+          // Perform text search for search value of 'searchTerm'
+          { $text: { $search: searchTerm } },
+          // Assign 'searchTerm' a text score to provide best match
+          { score: { $meta: "textScore" } }
+          // Sort results according to that textScore (as well as by likes in descending order)
+        )
+          .sort({
+            score: { $meta: "textScore" },
+            likes: "desc"
+          })
+          .limit(5);
+        return searchResults;
+      }
     },
     infiniteScrollPosts: async (_, { pageNum, pageSize }, { Post }) => {
       let posts;
@@ -77,6 +100,23 @@ module.exports = {
         createdBy: creatorId
       }).save();
       return newPost;
+    },
+    updateUserPost: async (
+      _,
+      { postId, userId, title, imageUrl, categories, description },
+      { Post }
+    ) => {
+      const post = await Post.findOneAndUpdate(
+        // Find post by postId and createdBy
+        { _id: postId, createdBy: userId },
+        { $set: { title, imageUrl, categories, description } },
+        { new: true }
+      );
+      return post;
+    },
+    deleteUserPost: async (_, { postId }, { Post }) => {
+      const post = await Post.findOneAndRemove({ _id: postId });
+      return post;
     },
     addPostMessage: async (_, { messageBody, userId, postId }, { Post }) => {
       const newMessage = {
