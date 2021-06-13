@@ -6,7 +6,8 @@
   "scripts": {
     "server": "nodemon server.js",
     "client": "cd client && npm run serve",
-    "dev": "concurrently --names \"server,client\" \"npm run server --silent\" \"npm run client --silent\""
+    "dev": "yarn postinstall && concurrently --names \"server,client\" \"npm run server --silent\" \"npm run client --silent\"",
+    "postinstall": "yarn && cd client && yarn && cd .."
   },
   "keywords": [],
   "author": "Jean Snyman",
